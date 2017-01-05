@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+	<head>
+		<title>SVJesus christ</title>
+	</head>
+	<body>
+		<div id="target"></div>
+		<script>
+			// Target div to load fuzz data into
+			var target   = document.getElementById("target");
+
+			// Set the lock
+			var _loaded = false;
+			function doFuzz() {
+				// Load in the fuzz data
+				var xhr = new XMLHttpRequest();
+				xhr.open("GET", "http://127.0.0.1:9999/", true);
+				xhr.onload = function () {
+					if (xhr.readyState == xhr.DONE) {
+							target.innerHTML = xhr.responseText;
+					}
+					// Release the lock
+					_loaded = true;
+				};
+				xhr.send(null);
+
+				// Wait for the previous request to complete and load in
+				function loadWait() {
+					if (! _loaded) setTimeout(loadWait, 0);
+					else doFuzz();
+				}
+				loadWait();
+			}
+
+			// Start the fuzzing
+			doFuzz();
+
+			// Reset in case of hangs / weird occurances
+			setTimeout(function(){document.location.reload();}, 1000);
+		</script>
+	</body>
+</html>
