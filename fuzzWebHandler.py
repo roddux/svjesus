@@ -146,6 +146,7 @@ def main(opts, args):
                 countThread.join()
                 fuzzThread.join()
                 # chromeThread.join(1)
+                print("Served ~%d requests\n" % _tCount)
                 break
 
             # Any other input saves the current fuzz backlog
