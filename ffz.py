@@ -6,6 +6,10 @@
 # All very WIP, enter at your own peril
 import random
 
+import shapes
+
+basicShapes = shapes.basicShapes
+
 def genContent():
 	return random.choice(
 		(
@@ -15,13 +19,9 @@ def genContent():
 		)
 	)
 
-def genAnimation():
-	return random.choice(
-		(
-			"""<animate attributeName="x" from="-1000" to="1000" dur=".1s" repeatCount="indefinite"/>""",
-			"""<animate attributeName="y" from="-1000" to="1000" dur=".1s" repeatCount="indefinite"/>""",
-		)
-	)
+def genAnimation(attribs):
+	animStr = """<animate attributeName="{}" from="{}" to="{}" dur=".1s" repeatCount="indefinite"/>"""
+	return animStr.format(random.choice(attribs)["name"], genContent(), genContent())
 
 def genAttr(tagRef, tagLst):
 	randAttr = random.choice(tagLst)
@@ -30,12 +30,14 @@ def genAttr(tagRef, tagLst):
 	if random.randint(1,100) > 20:
 		del tagLst[tagLst.index(randAttr)]
 
-	if callable(randAttr["data"]):
+	# if callable(randAttr["data"]):
 		# Some attributes will have specific generators
-		content = randAttr["data"]()
-	else:
+		# content = randAttr["data"]()
+	# else:
 		# Fallback content generator
-		content = genContent()
+	content = genContent()
+	# elif <custom regex string>
+		# custom content generator ?
 
 	return randAttr["name"]+"=\""+content+"\" "
 
@@ -54,7 +56,7 @@ def genTag():
 
 	retStr = "<"+newTag+" "+attrStr+" "
 	if round(random.random()):
-		retStr += ">" + genAnimation() + "</"+newTag+">"
+		retStr += ">" + genAnimation(basicShapes[newTag]["attrs"]) + "</"+newTag+">"
 	else:
 		retStr += "/>"
 	return retStr
@@ -64,113 +66,3 @@ def genStuff():
 	retStr += (lambda: "".join(genTag() for _ in range(5)))()
 	retStr += "</svg>"
 	return retStr
-
-# here be dragons
-basicShapes = {
-	"circle": {
-		"attrs":
-			[
-				{
-					"name": "cx",
-					"data": genContent
-					# "data": <function reference> ?
-					# if callable(tags[tag][attr][N][data]): [..]
-				},
-				{
-					"name": "cy",
-					# "data": "[0-9]*"
-					"data": genContent
-				},
-				{
-					"name": "r",
-					"data": genContent
-				}
-			]
-			# ].extend(globalAttrs)
-			# Extend now, or when generating fuzz data at runtime?
-			# Which is faster/lower footprint? Speed is more important.
-			# => Profiling
-	},
-	"rect": {
-		"attrs":
-			[
-				{
-					"name": "x",
-					"data": genContent
-				},
-				{
-					"name": "y",
-					"data": genContent
-				},
-				{
-					"name": "width",
-					"data": genContent
-				},
-				{
-					"name": "height",
-					"data": genContent
-				},
-				{
-					"name": "rx",
-					"data": genContent
-				},
-				{
-					"name": "ry",
-					"data": genContent
-				}
-			]
-	},
-	"ellipse": {
-		"attrs":
-			[
-				{
-					"name": "cx",
-					"data": genContent
-				},
-				{
-					"name": "cy",
-					"data": genContent
-				},
-				{
-					"name": "rx",
-					"data": genContent
-				},
-				{
-					"name": "ry",
-					"data": genContent
-				}
-			]
-	},
-	"polygon": {
-		"attrs":
-			[
-				{
-					"name": "points",
-					"data": genContent
-				}
-			]
-	},
-	"polyline": {
-		"attrs":
-			[
-				{
-					"name": "points",
-					"data": genContent
-				}
-			]
-	}
-}
-
-globalAttrs = (
-	#requiredExtensions, requiredFeatures, systemLanguage,
-	#id, xml:base, xml:lang, xml:space, tabindex,
-	#onabort, onerror, onresize, onscroll, onunload, onzoom,
-	#height, result, width, x, y,
-	#onactivate, onclick, onfocusin, onfocusout, onload, onmousedown, onmousemove, onmouseout, onmouseover, onmouseup,
-	#type, tableValues, slope, intercept, amplitude, exponent, offset
-	#xlink:href, xlink:type, xlink:role, xlink:arcrole, xlink:title, xlink:show, xlink:actuate
-	{
-		"name": "style",
-		"data": genContent
-	}
-)

@@ -104,6 +104,8 @@ def usage():
 
 # Main logic
 def main(opts, args):
+    global _fuzzPort, _randSeed, _autoReload
+    
     # Set the random seed
     _randSeed = random.randint(100,10000)
     

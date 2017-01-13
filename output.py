@@ -100,6 +100,7 @@ if __name__ == "__main__":
 			) + ".html"
 			for _ in fuzzData
 		)
+		fileNames = list(fileNames)
 		fileNames.sort()
 
 		# Generate full-page fuzz recreations
