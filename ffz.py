@@ -6,9 +6,9 @@
 # All very WIP, enter at your own peril
 import random
 
-import shapes
+import elements 
 
-ELEMENTS = shapes.ELEMENTS
+ELEMENTS = elements.ELEMENTS
 
 def genContent():
 	return random.choice(
