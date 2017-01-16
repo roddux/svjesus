@@ -6,34 +6,32 @@
 import pickle, sys, random, time, os
 
 # Same byte-length as the original page (noReload.html) Could be important!
-_template = """
+# TODO: This is no longer the same byte-length, fix pls
+_template = """\
 <!doctype html>
 <html>
 	<head>
 		<title>SVJesus christ</title>
+		<meta charset="UTF-8">
+		<meta http-equiv="refresh" content="1;URL='http://localhost:8000{URL}'">
 	</head>
-	<body>
-		<div id="target">{}</div>
-		<script>
-//................................................................
-//................................................................
-//................................................................
-//...............................................................
-//...............................................................
-//...............................................................
-//...............................................................
-//...............................................................
-//...............................................................
-//...............................................................
-//...............................................................
-//...............................................................
-		</script>
+	<body onload="jsMess()">
+		<div id="target">{TRG}</div>
+		<script>{SCRIPT}</script>
 	</body>
 </html>"""
 
+_fuzzScript = """\
+function jsMess() {
+	var target = document.getElementById("target").childNodes[0];
+	target.append("ASDF");
+	target.removeChild(target.childNodes[1]);
+	target.childNodes[0].innerHTML = "bluh";
+}"""
+
 # Option 2, in case the break relied on the loading sequence
 # NOTE: The template is split in two, because {} is used as the format string.
-_template2 = """
+_template2 = """\
 <!doctype html>
 <html>
 	<head>
@@ -70,6 +68,12 @@ _template2a = """
 		</script>
 	</body>
 </html>"""
+
+# Script to start the http server
+_serveScript = """\
+#!/usr/bin/env bash
+python -m http.server
+"""
 
 if __name__ == "__main__":
 	# Load the pickled fuzz data
@@ -108,9 +112,18 @@ if __name__ == "__main__":
 		os.chdir("FULL")
 		for X in range(len(fuzzData)):
 			with open(fileNames[X], "wb") as fullFuzzF:
+				nextFile = ""
+				try:
+					nextFile = fileNames[X+1]
+				except:
+					pass
 				fullFuzzF.write(
 					_template.format(
-						fuzzData[X].decode("UTF-8")
+						**{
+						"URL":"/FULL/"+nextFile,
+						"TRG":fuzzData[X].decode("UTF-8"),
+						"SCRIPT":_fuzzScript
+						}
 					).encode("UTF-8")
 				)
 
@@ -123,6 +136,12 @@ if __name__ == "__main__":
 			inclName = "incl_"+fileNames[X]
 			with open(inclName, "wb") as inclFuzzF:
 				inclFuzzF.write(fuzzData[X])
-				targetList.append("/"+inclName)
+				targetList.append("/INCLUDE/"+inclName)
 		with open("index.html", "w") as inclMain:
 			inclMain.write(_template2.format(targetList)+_template2a)
+
+		# Write the serve script
+		os.chdir("..")
+		with open("serve.sh", "w") as serveScriptFile:
+			serveScriptFile.write(_serveScript)
+			os.chmod("serve.sh", 0o700)

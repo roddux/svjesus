@@ -8,7 +8,7 @@ import random
 
 import shapes
 
-basicShapes = shapes.basicShapes
+ELEMENTS = shapes.ELEMENTS
 
 def genContent():
 	return random.choice(
@@ -42,9 +42,9 @@ def genAttr(tagRef, tagLst):
 	return randAttr["name"]+"=\""+content+"\" "
 
 def genTag():
-	newTag  = random.choice(list(basicShapes))
-	tagLst  = basicShapes[newTag]["attrs"].copy()
-	tagRef  = basicShapes[newTag]
+	newTag  = random.choice(list(ELEMENTS))
+	tagLst  = ELEMENTS[newTag]["attrs"].copy()
+	tagRef  = ELEMENTS[newTag]
 	attrStr = ""
 
 	for _ in range(2):
@@ -55,8 +55,8 @@ def genTag():
 			pass
 
 	retStr = "<"+newTag+" "+attrStr+" "
-	if round(random.random()):
-		retStr += ">" + genAnimation(basicShapes[newTag]["attrs"]) + "</"+newTag+">"
+	if round(random.random()) and len(tagLst) > 0:
+			retStr += ">" + genAnimation(ELEMENTS[newTag]["attrs"]) + "</"+newTag+">"
 	else:
 		retStr += "/>"
 	return retStr

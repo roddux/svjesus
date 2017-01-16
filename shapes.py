@@ -17,12 +17,68 @@ basicShapes = {
 				{
 					"name": "r",
 					# "data": genContent
-				}
+				},
 			]
-			# ].extend(globalAttrs)
-			# Extend now, or when generating fuzz data at runtime?
-			# Which is faster/lower footprint? Speed is more important.
-			# => Profiling
+	},
+	"ellipse": {
+		"attrs":
+			[
+				{
+					"name": "cx",
+					# "data": genContent
+				},
+				{
+					"name": "cy",
+					# "data": genContent
+				},
+				{
+					"name": "rx",
+					# "data": genContent
+				},
+				{
+					"name": "ry",
+					# "data": genContent
+				},
+			]
+	},
+	"line": {
+		"attrs":
+			[
+				{
+					"name": "x1",
+					# "data": genContent
+				},
+				{
+					"name": "x2",
+					# "data": genContent
+				},
+				{
+					"name": "y1",
+					# "data": genContent
+				},
+				{
+					"name": "y2",
+					# "data": genContent
+				},
+			]
+	},
+	"polygon": {
+		"attrs":
+			[
+				{
+					"name": "points",
+					# "data": genContent
+				},
+			]
+	},
+	"polyline": {
+		"attrs":
+			[
+				{
+					"name": "points",
+					# "data": genContent
+				},
+			]
 	},
 	"rect": {
 		"attrs":
@@ -50,60 +106,99 @@ basicShapes = {
 				{
 					"name": "ry",
 					# "data": genContent
-				}
+				},
 			]
 	},
-	"ellipse": {
-		"attrs":
-			[
-				{
-					"name": "cx",
-					# "data": genContent
-				},
-				{
-					"name": "cy",
-					# "data": genContent
-				},
-				{
-					"name": "rx",
-					# "data": genContent
-				},
-				{
-					"name": "ry",
-					# "data": genContent
-				}
-			]
-	},
-	"polygon": {
-		"attrs":
-			[
-				{
-					"name": "points",
-					# "data": genContent
-				}
-			]
-	},
-	"polyline": {
-		"attrs":
-			[
-				{
-					"name": "points",
-					# "data": genContent
-				}
-			]
-	}
 }
 
-globalAttrs = (
-	#requiredExtensions, requiredFeatures, systemLanguage,
-	#id, xml:base, xml:lang, xml:space, tabindex,
-	#onabort, onerror, onresize, onscroll, onunload, onzoom,
-	#height, result, width, x, y,
-	#onactivate, onclick, onfocusin, onfocusout, onload, onmousedown, onmousemove, onmouseout, onmouseover, onmouseup,
-	#type, tableValues, slope, intercept, amplitude, exponent, offset
-	#xlink:href, xlink:type, xlink:role, xlink:arcrole, xlink:title, xlink:show, xlink:actuate
-	{
-		"name": "style",
-		# "data": genContent
-	}
-)
+descriptive = {
+	"desc": {
+		"attrs": []
+	},
+	"metadata": {
+		"attrs": []
+	},
+	"title": {
+		"attrs": []
+	},
+}
+
+graphicElements = {
+	"image": {
+		"attrs":
+			[
+				{
+					"name": "x",
+				},
+				{
+					"name": "y",
+				},
+				{
+					"name": "width",
+				},
+				{
+					"name": "height",
+				},
+				{
+					"name": "xlink:href",
+				},
+				{
+					"name": "preserveAspectRatio",
+				},
+			]
+	},
+	# "mesh": {
+	# 	"attrs":
+	# 		[
+	# 			{
+	# 				"name": "",
+	# 			},
+	# 		]
+	# },
+	"text": {
+		"attrs":
+			[
+				{
+					"name": "x",
+				},
+				{
+					"name": "y",
+				},
+				{
+					"name": "dx",
+				},
+				{
+					"name": "dy",
+				},
+				{
+					"name": "text-anchor",
+				},
+				{
+					"name": "rotate",
+				},
+				{
+					"name": "textLength",
+				},
+				{
+					"name": "lengthAdjust",
+				},
+			]
+	},
+	# "use": {
+	# 	"attrs":
+	# 		[
+	# 			{
+	# 				"name": "",
+	# 			},
+	# 		]
+	# },
+}
+
+ELEMENTS = basicShapes
+ELEMENTS.update(descriptive)
+ELEMENTS.update(graphicElements)
+
+# To check progress!
+if __name__ == "__main__":
+	count = len(descriptive)+len(basicShapes)+len(graphicElements)
+	print("Total elements: %d out of %d (%.2f%%)" % (count, 94, count/94 * 100))

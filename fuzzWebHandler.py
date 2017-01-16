@@ -8,7 +8,7 @@
 #  - Automatically launch Firefox in a memory-limited cgroup
 
 # Global imports
-import socket, sys, threading, time, subprocess, random, pickle, getopt
+import socket, sys, threading, time, subprocess, random, pickle, getopt, select
 
 # Local imports
 import ffz
@@ -24,15 +24,18 @@ _reloadStr = """<!doctype html><meta http-equiv="refresh" content="0">"""
 _httpResp  = """\
 HTTP/1.1 200 OK
 Access-Control-Allow-Origin: *
-Content-Type: text/html
+Content-Type: text/html; charset=utf-8
 Content-Length: {}
 Connection: close
 
 {}"""
-_autoReload = False
-_pFuzzLen     = 20
-_pFuzzIdx     = 0
-_pFuzzes      = [None for _ in range(_pFuzzLen)]
+_sTimeout    = 3
+_autoReload  = False
+_pFuzzLen    = 20
+_pFuzzIdx    = 0
+_pFuzzes     = [None for _ in range(_pFuzzLen)]
+_countThread = None
+_fuzzThread  = None
 
 # Thread to count the number of requests/sec
 def counter():
@@ -46,7 +49,7 @@ def counter():
 
 # HTTP socket handler thread
 def webFuzz():
-    global _count, _pFuzzes, _pFuzzIdx
+    global _count, _pFuzzes, _pFuzzIdx, _tCount
     print("Fuzzing on %s:%d..." % (_fuzzHost, _fuzzPort))
 
     # Who needs HTTP libraries anyway?
@@ -54,6 +57,7 @@ def webFuzz():
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind((_fuzzHost, _fuzzPort))
+        s.settimeout(_sTimeout)
         s.listen(10)
 
         # Generate our fuzz data
@@ -70,7 +74,20 @@ def webFuzz():
         fullData += fuzzData
 
         # Wait for a connection
-        con,adr = s.accept()
+        try:
+            con,adr = s.accept()
+        # If we don't get a connection within _sTimeout, assume a crash
+        except Exception:
+            if _fuzzEvt.is_set():
+                if _tCount != 0: # Assuming we've sent a fuzz already, that is
+                    print("No requests after %d seconds! Crash?" % _sTimeout)
+                    dumpLast()
+                    cleanUp()
+                    return
+                else:
+                    continue
+            else:
+                break
 
         # Read some of the request
         con.recv(1)
@@ -95,16 +112,36 @@ def webFuzz():
 #             else:
 #                 chrom.kill()
 #         print("Chrome died with signal: %d!" % abs(chromStat))
-#         # Bail as soon as we hit something
-#         _fuzzing = False
 
 # Some people are silly
 def usage():
     print("$ %s -p<>/--port=<> -s<>/--seed=<> -a/--autoreload" % sys.argv[0])
 
+# Dump last X fuzzes
+def dumpLast():
+    dumpFileName = "".join(chr(random.randint(65,90)) for _ in range(0,10))+".fpl"
+    with open(dumpFileName, "wb") as dumpFile:
+        pickle.dump(_pFuzzes, dumpFile)
+    print(
+        "Served ~%d requests, dumped last %d fuzzes to '%s':\n" % (_tCount, _pFuzzLen, dumpFileName)
+    )
+
+# Join all threads
+def cleanUp():
+    global _countThread, _fuzzThread, _fuzzEvt
+    _fuzzEvt.clear()
+    try:
+        _countThread.join()
+    except:
+        pass
+    try:
+        _fuzzThread.join()
+    except:
+        pass
+
 # Main logic
 def main(opts, args):
-    global _fuzzPort, _randSeed, _autoReload
+    global _fuzzPort, _randSeed, _autoReload, _fuzzEvt, _fuzzThread, _countThread
     
     # Set the random seed
     _randSeed = random.randint(100,10000)
@@ -128,37 +165,27 @@ def main(opts, args):
     _fuzzEvt.set()
 
     # Start threads
-    countThread = threading.Thread(target=counter)
-    countThread.start()
-    fuzzThread = threading.Thread(target=webFuzz)
-    fuzzThread.start()
-    # chromeThread = threading.Thread(target=chromeFuzz)
-    # chromeThread.start()
+    _countThread = threading.Thread(target=counter)
+    _countThread.start()
+    _fuzzThread = threading.Thread(target=webFuzz)
+    _fuzzThread.start()
 
     # Main loop; waiting for and acting on user input
     while True:
-        try:
-            cmd = input()
+        cmd = ""
+        if select.select([sys.stdin], [], [], 2)[0]:
+            cmd = sys.stdin.readline().strip()
+        else:
+            continue
 
-            # Q to quit
-            if cmd in ("q", "Q"):
-                _fuzzEvt.clear()
-                countThread.join()
-                fuzzThread.join()
-                # chromeThread.join(1)
-                print("Served ~%d requests\n" % _tCount)
-                break
+        # Q to quit
+        if cmd in ("q", "Q"):
+            cleanUp()
+            return
 
-            # Any other input saves the current fuzz backlog
-            else:
-                dumpFileName = "".join(chr(random.randint(65,90)) for _ in range(0,10))+".fpl"
-                with open(dumpFileName, "wb") as dumpFile:
-                    pickle.dump(_pFuzzes, dumpFile)
-                print(
-                    "Served ~%d requests, dumped last %d fuzzes to '%s':\n" % (_tCount, _pFuzzLen, dumpFileName)
-                )
-        except:
-            pass
+        # Any other input saves the current fuzz backlog
+        else:
+            dumpLast()
 
 if __name__ == "__main__":
     # Parse program options

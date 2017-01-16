@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<title>SVJesus christ</title>
+		<meta charset="UTF-8">
 	</head>
 	<body>
 		<div id="target"></div>
@@ -18,6 +19,7 @@
 				xhr.onload = function () {
 					if (xhr.readyState == xhr.DONE) {
 							target.innerHTML = xhr.responseText;
+							jsMess();
 					}
 					// Release the lock
 					_loaded = true;
@@ -37,6 +39,14 @@
 
 			// Reset in case of hangs / weird occurances
 			setTimeout(function(){document.location.reload();}, 1000);
+
+			// Mess around with the loaded SVG
+			function jsMess() {
+				var target = document.getElementById("target").childNodes[0];
+				target.append("ASDF");
+				target.removeChild(target.childNodes[1]);
+				target.childNodes[0].innerHTML = "bluh";
+			}
 		</script>
 	</body>
 </html>
