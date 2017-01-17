@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 # TODO:
-#> Implement select() so that the sockets won't wait for a connection after 
-#  the fuzzing event has been cleared.
 #> Set up program arguments to:
 #  - Automatically launch Chrome in a memory-limited cgroup
 #  - Automatically launch Firefox in a memory-limited cgroup
@@ -20,7 +18,24 @@ _randSeed  = 0
 _fuzzPort  = 9999
 _fuzzEvt   = threading.Event()
 _fuzzHost  = "127.0.0.1"
-_reloadStr = """<!doctype html><meta http-equiv="refresh" content="0">"""
+_reloadStr = """\
+<!doctype html>
+<html><head><!-- meta http-equiv="refresh" content="0.01" --></head>
+<body onload="jsMess()">
+<script>
+function jsMess() {
+    try {
+        var target = document.getElementById("target").childNodes[0];
+        target.append("ASDF");
+        target.removeChild(target.childNodes[1]);
+        target.childNodes[0].innerHTML = "bluh";
+    } catch(e) {
+        document.location.reload();
+    }
+}
+</script>
+"""
+_closeStr  = """</body></html>"""
 _httpResp  = """\
 HTTP/1.1 200 OK
 Access-Control-Allow-Origin: *
@@ -69,9 +84,12 @@ def webFuzz():
 
         # Get our response ready
         sendLen   = len(fuzzData)
-        sendLen  += len(_reloadStr.encode("UTF-8")) if _autoReload else 0
+        if _autoReload:
+            sendLen  += len(_reloadStr.encode("UTF-8"))
+            sendLen  += len(_closeStr.encode("UTF-8"))
         fullData  = _httpResp.format(sendLen,_reloadStr if _autoReload else "").encode("UTF-8")
         fullData += fuzzData
+        fullData += _closeStr.encode("UTF-8") if _autoReload else b""
 
         # Wait for a connection
         try:
@@ -117,7 +135,7 @@ def webFuzz():
 def usage():
     print("$ %s -p<>/--port=<> -s<>/--seed=<> -a/--autoreload" % sys.argv[0])
 
-# Dump last X fuzzes
+# Dump last _pFuzzLen fuzzes
 def dumpLast():
     dumpFileName = "".join(chr(random.randint(65,90)) for _ in range(0,10))+".fpl"
     with open(dumpFileName, "wb") as dumpFile:

@@ -98,13 +98,12 @@ if __name__ == "__main__":
 			sys.exit(1)
 
 		# Ensure output files are in the same order as the fuzz data
-		fileNames = (
+		fileNames = [
 			"".join(
 				chr(random.randint(65,90)) for _ in range(5)
 			) + ".html"
 			for _ in fuzzData
-		)
-		fileNames = list(fileNames)
+		]
 		fileNames.sort()
 
 		# Generate full-page fuzz recreations
