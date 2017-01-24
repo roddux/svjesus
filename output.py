@@ -2,6 +2,9 @@
 
 # Recreate the fuzz that caused a crash, as it was seen by the browser. 
 
+# TODO: Move the fuzzScript to an external JS file, reference it from all
+# scripts rather than re-creating it.
+
 # Global imports
 import pickle, sys, random, time, os
 
@@ -13,7 +16,7 @@ _template = """\
 	<head>
 		<title>SVJesus christ</title>
 		<meta charset="UTF-8">
-		<meta http-equiv="refresh" content="1;URL='http://localhost:8000{URL}'">
+		<meta http-equiv="refresh" content="10;URL='http://localhost:8000{URL}'">
 	</head>
 	<body onload="jsMess()">
 		<div id="target">{TRG}</div>
@@ -22,11 +25,29 @@ _template = """\
 </html>"""
 
 _fuzzScript = """\
+var seed = parseInt(document.location.hash.substr(1));
+if (isNaN(seed)) seed = 1;
+function Rnd () {
+    var x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+}
 function jsMess() {
-	var target = document.getElementById("target").childNodes[0];
-	target.append("ASDF");
-	target.removeChild(target.childNodes[1]);
-	target.childNodes[0].innerHTML = "bluh";
+    try {
+        var target = document.getElementById("target");
+        target.append("ASDF");
+        target.childNodes[Math.floor(Rnd()*target.childNodes.length)].innerHTML = "bluh";
+        x = target.animate({});
+        x.play(); x.dispatchEvent(new Event({}));
+        y = x.currentTime;
+        target.appendChild(
+            target.childNodes[Math.floor(Rnd()*target.childNodes.length)]
+        );
+        target.removeChild(
+            target.childNodes[Math.floor(Rnd()*target.childNodes.length)]
+        );
+    } catch(e) {}
+    document.location.hash = seed;
+    if (seed < 1000) document.location.reload();
 }"""
 
 # Option 2, in case the break relied on the loading sequence

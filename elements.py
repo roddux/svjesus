@@ -2,7 +2,7 @@
 basicShapes = {
 	"circle": {
 		"attrs":
-			[
+			(
 				{
 					"name": "cx",
 					# "data": genContent
@@ -18,11 +18,11 @@ basicShapes = {
 					"name": "r",
 					# "data": genContent
 				},
-			]
+			)
 	},
 	"ellipse": {
 		"attrs":
-			[
+			(
 				{
 					"name": "cx",
 					# "data": genContent
@@ -39,11 +39,11 @@ basicShapes = {
 					"name": "ry",
 					# "data": genContent
 				},
-			]
+			)
 	},
 	"line": {
 		"attrs":
-			[
+			(
 				{
 					"name": "x1",
 					# "data": genContent
@@ -60,29 +60,29 @@ basicShapes = {
 					"name": "y2",
 					# "data": genContent
 				},
-			]
+			)
 	},
 	"polygon": {
 		"attrs":
-			[
+			(
 				{
 					"name": "points",
 					# "data": genContent
 				},
-			]
+			)
 	},
 	"polyline": {
 		"attrs":
-			[
+			(
 				{
 					"name": "points",
 					# "data": genContent
 				},
-			]
+			)
 	},
 	"rect": {
 		"attrs":
-			[
+			(
 				{
 					"name": "x",
 					# "data": genContent
@@ -107,26 +107,26 @@ basicShapes = {
 					"name": "ry",
 					# "data": genContent
 				},
-			]
+			)
 	},
 }
 
 descriptive = {
 	"desc": {
-		"attrs": []
+		"attrs": ()
 	},
 	"metadata": {
-		"attrs": []
+		"attrs": ()
 	},
 	"title": {
-		"attrs": []
+		"attrs": ()
 	},
 }
 
 graphicElements = {
 	"image": {
 		"attrs":
-			[
+			(
 				{
 					"name": "x",
 				},
@@ -145,19 +145,19 @@ graphicElements = {
 				{
 					"name": "preserveAspectRatio",
 				},
-			]
+			)
 	},
 	# "mesh": {
 	# 	"attrs":
-	# 		[
+	# 		(
 	# 			{
 	# 				"name": "",
 	# 			},
-	# 		]
+	# 		)
 	# },
 	"text": {
 		"attrs":
-			[
+			(
 				{
 					"name": "x",
 				},
@@ -182,15 +182,15 @@ graphicElements = {
 				{
 					"name": "lengthAdjust",
 				},
-			]
+			)
 	},
 	# "use": {
 	# 	"attrs":
-	# 		[
+	# 		(
 	# 			{
 	# 				"name": "",
 	# 			},
-	# 		]
+	# 		)
 	# },
 }
 

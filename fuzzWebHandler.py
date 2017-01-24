@@ -23,15 +23,31 @@ _reloadStr = """\
 <html><head><!-- meta http-equiv="refresh" content="0.01" --></head>
 <body onload="jsMess()">
 <script>
+var seed = Math.floor(Math.random() * 100);
+function Rnd () {
+    var x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+}
 function jsMess() {
     try {
-        var target = document.getElementById("target").childNodes[0];
+        var target = document.getElementById("target");
         target.append("ASDF");
-        target.removeChild(target.childNodes[1]);
-        target.childNodes[0].innerHTML = "bluh";
-    } catch(e) {
-        document.location.reload();
-    }
+        target.childNodes[Math.floor(Rnd()*target.childNodes.length)].innerHTML = "bluh";
+        x = target.animate({});
+        x.play(); x.dispatchEvent(new Event({}));
+        y = x.currentTime;
+        target.appendChild(
+            target.childNodes[Math.floor(Rnd()*target.childNodes.length)]
+        );
+        target.childNodes[Math.floor(Rnd()*target.childNodes.length)].innerHTML = "bluh";
+        x = target.childNodes[Math.floor(Rnd()*target.childNodes.length)].animate({});
+        x.play(); x.dispatchEvent(new Event({}));
+        y = x.currentTime;
+        target.removeChild(
+            target.childNodes[Math.floor(Rnd()*target.childNodes.length)]
+        );
+    } catch(e) {}
+    document.location.reload();
 }
 </script>
 """
@@ -44,7 +60,7 @@ Content-Length: {}
 Connection: close
 
 {}"""
-_sTimeout    = 3
+_sTimeout    = 10
 _autoReload  = False
 _pFuzzLen    = 20
 _pFuzzIdx    = 0

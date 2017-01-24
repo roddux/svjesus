@@ -43,8 +43,8 @@ def genAttr(tagRef, tagLst):
 
 def genTag():
 	newTag  = random.choice(list(ELEMENTS))
-	tagLst  = ELEMENTS[newTag]["attrs"].copy()
 	tagRef  = ELEMENTS[newTag]
+	tagLst  = tagRef["attrs"][:] # [:] is faster than .copy()
 	attrStr = ""
 
 	for _ in range(2):
@@ -56,13 +56,13 @@ def genTag():
 
 	retStr = "<"+newTag+" "+attrStr+" "
 	if round(random.random()) and len(tagLst) > 0:
-			retStr += ">" + genAnimation(ELEMENTS[newTag]["attrs"]) + "</"+newTag+">"
+			retStr += ">" + genAnimation(tagRef["attrs"]) + "</"+newTag+">"
 	else:
 		retStr += "/>"
 	return retStr
 
 def genStuff():
-	retStr = """<svg width="%d" height="%d">""" % (random.randint(1,100), random.randint(1,100))
+	retStr = """<svg id="target" width="%d" height="%d">""" % (random.randint(1,100), random.randint(1,100))
 	retStr += (lambda: "".join(genTag() for _ in range(5)))()
 	retStr += "</svg>"
 	return retStr
