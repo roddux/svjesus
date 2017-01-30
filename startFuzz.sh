@@ -2,7 +2,8 @@
 
 # Globals
 FUZZGROUP="NEWFUZZ"
-USER=`whoami`
+# USER=`whoami`
+USER="roddux"
 LIMIT="650M"
 CGCREATE=""
 CGEXEC=""
@@ -27,8 +28,16 @@ if [ $INSTALLED != 0 ]
 fi
 
 # Create the cgroup
+which sudo &>/dev/null
+USESUDO=$?
 echo "Creating memory-limited cgroup '$FUZZGROUP'... "
-sudo $CGCREATE -a $USER:$USER -t $USER:$USER -g memory:$FUZZGROUP
+if [ $USESUDO != 0 ]
+	then
+		echo "sudo not found! Using su-- please enter root password"
+		su -c "$CGCREATE -a $USER:$USER -t $USER:$USER -g memory:$FUZZGROUP"
+	else
+		sudo $CGCREATE -a $USER:$USER -t $USER:$USER -g memory:$FUZZGROUP
+fi
 if [ ! -w /sys/fs/cgroup/memory/$FUZZGROUP/memory.limit_in_bytes ]
 	then
 		echo "Error creating cgroup"
@@ -47,4 +56,9 @@ echo "Now run one of the following:"
 echo -e "\t$ $CGEXEC -g memory:$FUZZGROUP chromium"
 echo -e "\t$ $CGEXEC -g memory:$FUZZGROUP firefox --no-remote --new-instance --profile /tmp/\n"
 echo "Remove the group (after fuzzing) with:"
-echo -e "\t$ sudo $CGDELETE -g memory:$FUZZGROUP"
+if [ $USESUDO != 0 ]
+	then
+		echo -e "\t$ su -c \"$CGDELETE -g memory:$FUZZGROUP\""
+	else
+		echo -e "\t$ sudo $CGDELETE -g memory:$FUZZGROUP"
+fi

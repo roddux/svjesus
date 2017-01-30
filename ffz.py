@@ -3,66 +3,60 @@
 # SVJesus christ give it a rest with the puns already
 # https://developer.mozilla.org/en-US/docs/Web/SVG
 
-# All very WIP, enter at your own peril
+# Content generation and utility functions will be moved
 import random
-
-import elements 
-
-ELEMENTS = elements.ELEMENTS
-
+def coinflip(): return random.choice((True,False))
 def genContent():
 	return random.choice(
 		(
-			"".join(chr(random.randint(0,255)) for q in range(0,20)),
+			# "".join(chr(random.randint(0,255)) for q in range(0,20)),
 			"AAAAAAAAAAAAAAAAA",
 			random.choice(("99999999999999", "-99999999999999")),
 		)
 	)
 
-def genAnimation(attribs):
-	animStr = """<animate attributeName="{}" from="{}" to="{}" dur=".1s" repeatCount="indefinite"/>"""
-	return animStr.format(random.choice(attribs)["name"], genContent(), genContent())
+import elements
 
-def genAttr(tagRef, tagLst):
-	randAttr = random.choice(tagLst)
+# Generate a bunch of elements
+def genTags(recurseCount=10, pickList=None):
+	totalTags = 10
+	retStr = ""
 
-	# 20% of the time, we add a duplicate tag
-	if random.randint(1,100) > 20:
-		del tagLst[tagLst.index(randAttr)]
+	# Continue generating tags until we hit the limit
+	while totalTags > 0:
+		# If we're not limited to certain tags, chose from the whole list
+		if pickList == None:
+			tag = random.choice(elements.ELEMENTS)()
+		# Otherwise chose from the list supplied
+		else:
+			if len(pickList) == 0: break
+			tag = random.choice(pickList)()
 
-	# if callable(randAttr["data"]):
-		# Some attributes will have specific generators
-		# content = randAttr["data"]()
-	# else:
-		# Fallback content generator
-	content = genContent()
-	# elif <custom regex string>
-		# custom content generator ?
+		# Increase generated tag count
+		totalTags = totalTags - 1
 
-	return randAttr["name"]+"=\""+content+"\" "
+		# A high attrCount uses all of the attributes, doesn't duplicate
+		retStr += tag.genOpen(attrCount=50)
 
-def genTag():
-	newTag  = random.choice(list(ELEMENTS))
-	tagRef  = ELEMENTS[newTag]
-	tagLst  = tagRef["attrs"][:] # [:] is faster than .copy()
-	attrStr = ""
+		# Maybe recurse, if we're under the limit
+		# if recurseCount and coinflip() and coinflip() and coinflip():
+		# 	recurseCount = recurseCount-1
+		# 	mStr,totalTags=genTags(recurseCount=recurseCount, pickList=(tag.allowedChildren))
+		# 	retStr += mStr
 
-	for _ in range(2):
-		try:
-			attrStr += "".join(genAttr(tagRef,tagLst))
-		except Exception as e:
-			# print(e)
-			pass
+		# Add the closer
+		retStr += tag.genClose()+"\n"
 
-	retStr = "<"+newTag+" "+attrStr+" "
-	if round(random.random()) and len(tagLst) > 0:
-			retStr += ">" + genAnimation(tagRef["attrs"]) + "</"+newTag+">"
-	else:
-		retStr += "/>"
+	return retStr,totalTags
+
+# The main function
+def genSVG():
+	SVG = elements.SVG()
+	retStr  = SVG.genOpen(attrCount=5)
+	retStr += genTags(pickList=elements.SVG().allowedChildren)[0]
+	retStr += SVG.genClose()
 	return retStr
 
-def genStuff():
-	retStr = """<svg id="target" width="%d" height="%d">""" % (random.randint(1,100), random.randint(1,100))
-	retStr += (lambda: "".join(genTag() for _ in range(5)))()
-	retStr += "</svg>"
-	return retStr
+# Debug mode
+if __name__=="__main__":
+	print(genSVG())

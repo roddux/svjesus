@@ -11,6 +11,21 @@ import socket, sys, threading, time, subprocess, random, pickle, getopt, select
 # Local imports
 import ffz
 
+# Vanity banner
+_vBanner = """
+\t .d8888b.  888     888 888888
+\td88P  Y88b 888     888   "88b
+\tY88b.      888     888    888
+\t "Y888b.   Y88b   d88P    888  .d88b.  .d8888b  888  888 .d8888b
+\t    "Y88b.  Y88b d88P     888 d8P  Y8b 88K      888  888 88K
+\t      "888   Y88o88P      888 88888888 "Y8888b. 888  888 "Y8888b.
+\tY88b  d88P    Y888P       88P Y8b.          X88 Y88b 888      X88
+\t "Y8888P"      Y8P        888  "Y8888   88888P'  "Y88888  88888P'
+\t                        .d88P
+\t                      .d88P"
+\t                     888P"
+"""
+
 # Global variables
 _count     = 0
 _tCount    = 0
@@ -29,8 +44,8 @@ function Rnd () {
     return x - Math.floor(x);
 }
 function jsMess() {
+    var target = document.getElementById("target");
     try {
-        var target = document.getElementById("target");
         target.append("ASDF");
         target.childNodes[Math.floor(Rnd()*target.childNodes.length)].innerHTML = "bluh";
         x = target.animate({});
@@ -67,6 +82,7 @@ _pFuzzIdx    = 0
 _pFuzzes     = [None for _ in range(_pFuzzLen)]
 _countThread = None
 _fuzzThread  = None
+_crashWait   = False
 
 # Thread to count the number of requests/sec
 def counter():
@@ -74,7 +90,7 @@ def counter():
 
     while _fuzzEvt.is_set():
         time.sleep(1)
-        print("Requests per second: %d     " % _count, end="\r")
+        print("Requests per second: %d                    " % _count, end="\r")
         _tCount += _count
         _count = 0
 
@@ -89,12 +105,13 @@ def webFuzz():
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind((_fuzzHost, _fuzzPort))
         s.settimeout(_sTimeout)
-        s.listen(10)
+        s.listen(1)
 
         # Generate our fuzz data
-        fuzzData = ffz.genStuff().encode("UTF-8")
+        fuzzData = ffz.genSVG().encode("UTF-8")
 
         # Store the fuzz data in the rolling backlog, in case we hit a crash
+        # TODO: Is storing the most recent fuzz enough? Hmm.
         _pFuzzes[_pFuzzIdx] = fuzzData
         _pFuzzIdx = (_pFuzzIdx + 1) % _pFuzzLen
 
@@ -107,17 +124,20 @@ def webFuzz():
         fullData += fuzzData
         fullData += _closeStr.encode("UTF-8") if _autoReload else b""
 
-        # Wait for a connection
         try:
+            # Wait for a connection
             con,adr = s.accept()
+            # If we get a connection, the browser hasn't crashed
+            _crashWait = False
         # If we don't get a connection within _sTimeout, assume a crash
         except Exception:
             if _fuzzEvt.is_set():
-                if _tCount != 0: # Assuming we've sent a fuzz already, that is
+                # Assuming we're fuzzing, have sent a fuzz and aren't already waiting
+                if _tCount != 0 and not _crashWait:
                     print("No requests after %d seconds! Crash?" % _sTimeout)
                     dumpLast()
-                    cleanUp()
-                    return
+                    _crashWait = True
+                    continue
                 else:
                     continue
             else:
@@ -132,12 +152,11 @@ def webFuzz():
         con.close()
         s.close()
 
-# Thread to handle launching Chrome and catching crashes
-# def chromeFuzz():
+# Thread to handle launching a browser and catching crashes
+# def browserFuzz():
 #     while _fuzzEvt.is_set():
-#         # print("Fuzzing Chrome in memory-limited cgroup 'NEWFUZZ'...")
+#         # print("Fuzzing browser in memory-limited cgroup 'NEWFUZZ'...")
 #         # chrom = subprocess.Popen(["/usr/bin/cgexec", "-g memory:NEWFUZZ chromium http://127.0.0.1:9999/"])
-#         print("Fuzzing Chrome...")
 #         chrom = subprocess.Popen(["/usr/lib/chromium/chromium", "http://127.0.0.1:9999/"])
 #         chromStat = chrom.poll()
 #         while chromStat == None:
@@ -151,27 +170,28 @@ def webFuzz():
 def usage():
     print("$ %s -p<>/--port=<> -s<>/--seed=<> -a/--autoreload" % sys.argv[0])
 
+# Print fuzz status
+def dumpStats():
+    print("Served ~%d requests\n" % _tCount)
+
 # Dump last _pFuzzLen fuzzes
 def dumpLast():
     dumpFileName = "".join(chr(random.randint(65,90)) for _ in range(0,10))+".fpl"
     with open(dumpFileName, "wb") as dumpFile:
         pickle.dump(_pFuzzes, dumpFile)
-    print(
-        "Served ~%d requests, dumped last %d fuzzes to '%s':\n" % (_tCount, _pFuzzLen, dumpFileName)
-    )
+    dumpStats()
+    print("Dumped last %d fuzzes to '%s':\n" % (_pFuzzLen, dumpFileName))
 
 # Join all threads
 def cleanUp():
     global _countThread, _fuzzThread, _fuzzEvt
     _fuzzEvt.clear()
-    try:
-        _countThread.join()
-    except:
-        pass
-    try:
-        _fuzzThread.join()
-    except:
-        pass
+
+    try:    _countThread.join()
+    except: pass
+
+    try:   _fuzzThread.join()
+    except: pass
 
 # Main logic
 def main(opts, args):
@@ -214,6 +234,7 @@ def main(opts, args):
 
         # Q to quit
         if cmd in ("q", "Q"):
+            dumpStats()
             cleanUp()
             return
 
@@ -231,4 +252,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Run the program
+    print(_vBanner)
     main(opts, args)

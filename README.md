@@ -1,9 +1,11 @@
 # Readme
 SVJesus, an SVG fuzzer. With a web handler. You know the drill.
 
-# Thoughts / musings
+## Thoughts / musings
 Most of these are probably useful ideas for RuCSS too.
 RuCSS could plug-in to fuzz the style attribute.
+Use-after-free are the most common vuln type.
+Expand the codebase until it can generate known past vulnerabilities.
 
 ## Implement random utility functions
 ### Weighted random:
@@ -15,10 +17,7 @@ def weightChoice(LST):
 		r -= weight
 		if r <= 0: return choice
 
-### Random yes/no:
-def coinflip(): return round(random.random()) == 0
-
-### Classes?
+## Class list
 - Animation elements
 - Basic shapes
 - Container elements
@@ -39,23 +38,7 @@ def coinflip(): return round(random.random()) == 0
 - Text content child elements
 - Uncategorized elements
 
-All classes derived from Element, which would house global attributes
-Each class would contain a list of class-generic permitted child elements
-Each class would contain a list of class-generic attributes
-Individual elements would add attributes and additional child elements, if need be
-
-Named tuples can be used for classes, for things that don't change
-
-class BasicShape(SVGElement):
-	childElements = [Animation, Descriptive]
-
-class Circle(BasicShape):
-	params = {
-		"x": intGen,
-		"y": intGen
-	}
-
-### Generation
+## Generation ideas
 When generating SVGs, there would be a probability function whether to generate 
 correct (as specified) data, or whether to call an alternative junk generator.
 
@@ -64,3 +47,20 @@ def genStuff()
 	if should_generate_child_tags():
 		genStuff()
 	weighted_choice((genInvalid, 0.1), (X.genValid, 0.9))
+
+Or, just supply a switch to genTags() to chose whether to generate correct data.
+
+## Future plans
+### Implement a GUI
+https://wiki.python.org/moin/GuiProgramming
+https://riverbankcomputing.com/software/pyqt/intro
+https://wiki.qt.io/PySideTutorials_Simple_Dialog
+
+### Package it to run on windows hosts
+http://www.py2exe.org/
+http://www.pyinstaller.org/
+http://nuitka.net/pages/overview.html
+http://cx-freeze.readthedocs.io/en/latest/overview.html
+
+### Use a virtual desktop or something to hide the browser windows 
+https://technet.microsoft.com/en-us/sysinternals/cc817881.aspx

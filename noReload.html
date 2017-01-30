@@ -5,10 +5,10 @@
 		<meta charset="UTF-8">
 	</head>
 	<body>
-		<div id="target"></div>
+		<div id="divtarget"></div>
 		<script>
 			// Target div to load fuzz data into
-			var target   = document.getElementById("target");
+			var divtarget   = document.getElementById("divtarget");
 
 			// Set the lock
 			var _loaded = false;
@@ -18,7 +18,7 @@
 				xhr.open("GET", "http://127.0.0.1:9999/", true);
 				xhr.onload = function () {
 					if (xhr.readyState == xhr.DONE) {
-							target.innerHTML = xhr.responseText;
+							divtarget.innerHTML = xhr.responseText;
 							jsMess();
 					}
 					// Release the lock
@@ -42,10 +42,24 @@
 
 			// Mess around with the loaded SVG
 			function jsMess() {
-				var target = document.getElementById("target").childNodes[0];
-				target.append("ASDF");
-				target.removeChild(target.childNodes[1]);
-				target.childNodes[0].innerHTML = "bluh";
+			    var target = document.getElementById("target");
+			    try {
+			        target.append("ASDF");
+			        target.childNodes[Math.floor(Rnd()*target.childNodes.length)].innerHTML = "bluh";
+			        x = target.animate({});
+			        x.play(); x.dispatchEvent(new Event({}));
+			        y = x.currentTime;
+			        target.appendChild(
+			            target.childNodes[Math.floor(Rnd()*target.childNodes.length)]
+			        );
+			        target.childNodes[Math.floor(Rnd()*target.childNodes.length)].innerHTML = "bluh";
+			        x = target.childNodes[Math.floor(Rnd()*target.childNodes.length)].animate({});
+			        x.play(); x.dispatchEvent(new Event({}));
+			        y = x.currentTime;
+			        target.removeChild(
+			            target.childNodes[Math.floor(Rnd()*target.childNodes.length)]
+			        );
+			    } catch(e) {}
 			}
 		</script>
 	</body>
