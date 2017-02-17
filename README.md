@@ -6,16 +6,10 @@ Most of these are probably useful ideas for RuCSS too.
 RuCSS could plug-in to fuzz the style attribute.
 Use-after-free are the most common vuln type.
 Expand the codebase until it can generate known past vulnerabilities.
+Modify codebase (or create a fork/patchset) that allows running on Google's ClusterFuzz.
 
 ## Implement random utility functions
-### Weighted random:
-LST = [("a",2), ("b",3), ("d",5)]
-def weightChoice(LST):
-	weightSum = sum(C[1] for C in LST)
-	r = uniform(1, weightSum)
-	for (choice, weight) in LST:
-		r -= weight
-		if r <= 0: return choice
+- Weighted random
 
 ## Class list
 - Animation elements
@@ -48,7 +42,7 @@ def genStuff()
 		genStuff()
 	weighted_choice((genInvalid, 0.1), (X.genValid, 0.9))
 
-Or, just supply a switch to genTags() to chose whether to generate correct data.
+Or, just supply a switch to chose whether to generate correct data.
 
 ## Future plans
 ### Implement a GUI
@@ -56,11 +50,14 @@ https://wiki.python.org/moin/GuiProgramming
 https://riverbankcomputing.com/software/pyqt/intro
 https://wiki.qt.io/PySideTutorials_Simple_Dialog
 
-### Package it to run on windows hosts
+### Package it to run on Windows hosts
 http://www.py2exe.org/
 http://www.pyinstaller.org/
 http://nuitka.net/pages/overview.html
 http://cx-freeze.readthedocs.io/en/latest/overview.html
 
-### Use a virtual desktop or something to hide the browser windows 
+### Use a virtual desktop or equivalent to hide the browser windows 
 https://technet.microsoft.com/en-us/sysinternals/cc817881.aspx
+
+### CGroup equivalent for memory-limiting (look into this)
+https://msdn.microsoft.com/en-us/library/ms684161(VS.85).aspx

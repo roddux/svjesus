@@ -2,9 +2,6 @@
 
 # Recreate the fuzz that caused a crash, as it was seen by the browser. 
 
-# TODO: Move the fuzzScript to an external JS file, reference it from all
-# scripts rather than re-creating it.
-
 # Global imports
 import pickle, sys, random, time, os
 
@@ -16,9 +13,10 @@ _template = """\
 	<head>
 		<title>SVJesus christ</title>
 		<meta charset="UTF-8">
+		<script src="mess.js"></script>
 		<meta http-equiv="refresh" content="10;URL='http://localhost:8000{URL}'">
 	</head>
-	<body onload="jsMess()">
+	<body onload="jsMess(outputReload)">
 		<div id="target">{TRG}</div>
 		<script>{SCRIPT}</script>
 	</body>
@@ -26,29 +24,7 @@ _template = """\
 
 _fuzzScript = """\
 var seed = parseInt(document.location.hash.substr(1));
-if (isNaN(seed)) seed = 1;
-function Rnd () {
-    var x = Math.sin(seed++) * 10000;
-    return x - Math.floor(x);
-}
-function jsMess() {
-    try {
-        var target = document.getElementById("target");
-        target.append("ASDF");
-        target.childNodes[Math.floor(Rnd()*target.childNodes.length)].innerHTML = "bluh";
-        x = target.animate({});
-        x.play(); x.dispatchEvent(new Event({}));
-        y = x.currentTime;
-        target.appendChild(
-            target.childNodes[Math.floor(Rnd()*target.childNodes.length)]
-        );
-        target.removeChild(
-            target.childNodes[Math.floor(Rnd()*target.childNodes.length)]
-        );
-    } catch(e) {}
-    document.location.hash = seed;
-    if (seed < 1000) document.location.reload();
-}"""
+if (isNaN(seed)) seed = 1;"""
 
 # Option 2, in case the break relied on the loading sequence
 # NOTE: The template is split in two, because {} is used as the format string.

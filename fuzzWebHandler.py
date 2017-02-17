@@ -9,7 +9,7 @@
 import socket, sys, threading, time, subprocess, random, pickle, getopt, select
 
 # Local imports
-import ffz
+import svjesus.ffz
 
 # Vanity banner
 _vBanner = """
@@ -30,42 +30,18 @@ _vBanner = """
 _count     = 0
 _tCount    = 0
 _randSeed  = 0
+_jsMess    = open("mess.js", "r").read()
 _fuzzPort  = 9999
 _fuzzEvt   = threading.Event()
 _fuzzHost  = "127.0.0.1"
 _reloadStr = """\
 <!doctype html>
-<html><head><!-- meta http-equiv="refresh" content="0.01" --></head>
-<body onload="jsMess()">
+<html><head><script>%s</script></head>
+<body onload="jsMess(function(){document.location.reload();})">
 <script>
 var seed = Math.floor(Math.random() * 100);
-function Rnd () {
-    var x = Math.sin(seed++) * 10000;
-    return x - Math.floor(x);
-}
-function jsMess() {
-    var target = document.getElementById("target");
-    try {
-        target.append("ASDF");
-        target.childNodes[Math.floor(Rnd()*target.childNodes.length)].innerHTML = "bluh";
-        x = target.animate({});
-        x.play(); x.dispatchEvent(new Event({}));
-        y = x.currentTime;
-        target.appendChild(
-            target.childNodes[Math.floor(Rnd()*target.childNodes.length)]
-        );
-        target.childNodes[Math.floor(Rnd()*target.childNodes.length)].innerHTML = "bluh";
-        x = target.childNodes[Math.floor(Rnd()*target.childNodes.length)].animate({});
-        x.play(); x.dispatchEvent(new Event({}));
-        y = x.currentTime;
-        target.removeChild(
-            target.childNodes[Math.floor(Rnd()*target.childNodes.length)]
-        );
-    } catch(e) {}
-    document.location.reload();
-}
 </script>
-"""
+""" % _jsMess
 _closeStr  = """</body></html>"""
 _httpResp  = """\
 HTTP/1.1 200 OK
@@ -83,6 +59,8 @@ _pFuzzes     = [None for _ in range(_pFuzzLen)]
 _countThread = None
 _fuzzThread  = None
 _crashWait   = False
+
+
 
 # Thread to count the number of requests/sec
 def counter():
@@ -108,7 +86,7 @@ def webFuzz():
         s.listen(1)
 
         # Generate our fuzz data
-        fuzzData = ffz.genSVG().encode("UTF-8")
+        fuzzData = svjesus.ffz.genSVG().encode("UTF-8")
 
         # Store the fuzz data in the rolling backlog, in case we hit a crash
         # TODO: Is storing the most recent fuzz enough? Hmm.

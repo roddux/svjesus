@@ -15,7 +15,7 @@ def genContent():
 		)
 	)
 
-import elements
+import svjesus.elements
 
 # Generate a bunch of elements
 def genTags(recurseCount=10, pickList=None):
@@ -26,7 +26,7 @@ def genTags(recurseCount=10, pickList=None):
 	while totalTags > 0:
 		# If we're not limited to certain tags, chose from the whole list
 		if pickList == None:
-			tag = random.choice(elements.ELEMENTS)()
+			tag = random.choice(svjesus.elements.elementList)()
 		# Otherwise chose from the list supplied
 		else:
 			if len(pickList) == 0: break
@@ -36,13 +36,14 @@ def genTags(recurseCount=10, pickList=None):
 		totalTags = totalTags - 1
 
 		# A high attrCount uses all of the attributes, doesn't duplicate
-		retStr += tag.genOpen(attrCount=50)
+		retStr += tag.genOpen(attrCount=2)
 
 		# Maybe recurse, if we're under the limit
-		# if recurseCount and coinflip() and coinflip() and coinflip():
-		# 	recurseCount = recurseCount-1
-		# 	mStr,totalTags=genTags(recurseCount=recurseCount, pickList=(tag.allowedChildren))
-		# 	retStr += mStr
+		if recurseCount and coinflip() and coinflip() and coinflip():
+			recurseCount = recurseCount-1
+			# mStr,totalTags=genTags(recurseCount=recurseCount, pickList=(tag.allowedChildren))
+			mStr,totalTags=genTags(recurseCount=recurseCount, pickList=(svjesus.elements.elementList))
+			retStr += mStr
 
 		# Add the closer
 		retStr += tag.genClose()+"\n"
@@ -51,12 +52,8 @@ def genTags(recurseCount=10, pickList=None):
 
 # The main function
 def genSVG():
-	SVG = elements.SVG()
+	SVG = svjesus.elements.Base.SVG()
 	retStr  = SVG.genOpen(attrCount=5)
-	retStr += genTags(pickList=elements.SVG().allowedChildren)[0]
+	retStr += genTags(pickList=SVG.allowedChildren)[0]
 	retStr += SVG.genClose()
 	return retStr
-
-# Debug mode
-if __name__=="__main__":
-	print(genSVG())
