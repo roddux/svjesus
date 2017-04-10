@@ -6,7 +6,7 @@
 #  - Automatically launch Firefox in a memory-limited cgroup
 
 # Global imports
-import socket, sys, threading, time, subprocess, random, pickle, getopt, select
+import socket, sys, threading, time, subprocess, random, pickle, getopt
 
 # Local imports
 import svjesus.ffz
@@ -60,23 +60,20 @@ _countThread = None
 _fuzzThread  = None
 _crashWait   = False
 
-
-
 # Thread to count the number of requests/sec
 def counter():
     global _count, _tCount
 
     while _fuzzEvt.is_set():
-        time.sleep(1)
         print("Requests per second: %d                    " % _count, end="\r")
+        time.sleep(1)
         _tCount += _count
         _count = 0
 
 # HTTP socket handler thread
 def webFuzz():
     global _count, _pFuzzes, _pFuzzIdx, _tCount
-    print("Fuzzing on %s:%d..." % (_fuzzHost, _fuzzPort))
-
+    
     # Who needs HTTP libraries anyway?
     while _fuzzEvt.is_set():
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -89,7 +86,7 @@ def webFuzz():
         fuzzData = svjesus.ffz.genSVG().encode("UTF-8")
 
         # Store the fuzz data in the rolling backlog, in case we hit a crash
-        # TODO: Is storing the most recent fuzz enough? Hmm.
+        # TODO: Is storing the most recent fuzz enough? Probably..?
         _pFuzzes[_pFuzzIdx] = fuzzData
         _pFuzzIdx = (_pFuzzIdx + 1) % _pFuzzLen
 
@@ -121,7 +118,7 @@ def webFuzz():
             else:
                 break
 
-        # Read some of the request
+        # Read some of the request, to satisfy browsers
         con.recv(1)
 
         # Send a HTTP response with our fuzz data
@@ -160,10 +157,18 @@ def dumpLast():
     dumpStats()
     print("Dumped last %d fuzzes to '%s':\n" % (_pFuzzLen, dumpFileName))
 
-# Join all threads
+# Clean up everything
 def cleanUp():
     global _countThread, _fuzzThread, _fuzzEvt
     _fuzzEvt.clear()
+
+    # Hack to quickly close the listening socket
+    try:
+        _closeSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        _closeSock.connect((_fuzzHost,_fuzzPort))
+        _closeSock.send(b"bye")
+    except e:
+        print(e)
 
     try:    _countThread.join()
     except: pass
@@ -188,9 +193,11 @@ def main(opts, args):
             _autoReload = True
         else:
             assert False, "Unknown option %s" % o
-    print("Using random seed: %d" % _randSeed)
-    print("Using port:        %d" % _fuzzPort)
-    print("Autoreload is %sabled" % ("en" if _autoReload else "dis"))
+    print("=Info - - - - - -")
+    print("Random seed:       %d" % _randSeed)
+    print("Listening address: %s" % _fuzzHost)
+    print("Listning port:     %d" % _fuzzPort)
+    print("Autoreload is %sabled\n" % ("en" if _autoReload else "dis"))
     random.seed(_randSeed)
 
     # Set the fuzzing event
@@ -203,13 +210,9 @@ def main(opts, args):
     _fuzzThread.start()
 
     # Main loop; waiting for and acting on user input
-    while True:
-        cmd = ""
-        if select.select([sys.stdin], [], [], 2)[0]:
-            cmd = sys.stdin.readline().strip()
-        else:
-            continue
-
+    while _fuzzEvt.is_set():
+        cmd = sys.stdin.read(1).strip()
+        
         # Q to quit
         if cmd in ("q", "Q"):
             dumpStats()

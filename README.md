@@ -45,6 +45,9 @@ def genStuff()
 Or, just supply a switch to chose whether to generate correct data.
 
 ## Future plans
+### Implement a curses UI
+https://docs.python.org/3/howto/curses.html
+
 ### Implement a GUI
 https://wiki.python.org/moin/GuiProgramming
 https://riverbankcomputing.com/software/pyqt/intro

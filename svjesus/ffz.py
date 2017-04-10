@@ -18,6 +18,7 @@ def genContent():
 import svjesus.elements
 
 # Generate a bunch of elements
+# TODO: Need a way to pass valid arguments to this function, for use as attributes
 def genTags(recurseCount=10, pickList=None):
 	totalTags = 10
 	retStr = ""
@@ -36,7 +37,7 @@ def genTags(recurseCount=10, pickList=None):
 		totalTags = totalTags - 1
 
 		# A high attrCount uses all of the attributes, doesn't duplicate
-		retStr += tag.genOpen(attrCount=2)
+		retStr += tag.genOpen(attrCount=3)
 
 		# Maybe recurse, if we're under the limit
 		if recurseCount and coinflip() and coinflip() and coinflip():
