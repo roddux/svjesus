@@ -34,10 +34,12 @@ _jsMess    = open("mess.js", "r").read()
 _fuzzPort  = 9999
 _fuzzEvt   = threading.Event()
 _fuzzHost  = "127.0.0.1"
+
+#<body onload="jsMess(function(){document.location.reload();})">
 _reloadStr = """\
 <!doctype html>
 <html><head><script>%s</script></head>
-<body onload="jsMess(function(){document.location.reload();})">
+<body onload="dumpPage();document.location.reload();">
 <script>
 var seed = Math.floor(Math.random() * 100);
 </script>
@@ -65,8 +67,8 @@ def counter():
     global _count, _tCount
 
     while _fuzzEvt.is_set():
-        print("Requests per second: %d                    " % _count, end="\r")
         time.sleep(1)
+        print("Requests per second: %d                    " % _count, end="\r")
         _tCount += _count
         _count = 0
 
@@ -110,7 +112,7 @@ def webFuzz():
                 # Assuming we're fuzzing, have sent a fuzz and aren't already waiting
                 if _tCount != 0 and not _crashWait:
                     print("No requests after %d seconds! Crash?" % _sTimeout)
-                    dumpLast()
+                    # dumpLast()
                     _crashWait = True
                     continue
                 else:
@@ -146,16 +148,16 @@ def usage():
     print("$ %s -p<>/--port=<> -s<>/--seed=<> -a/--autoreload" % sys.argv[0])
 
 # Print fuzz status
-def dumpStats():
-    print("Served ~%d requests\n" % _tCount)
+# def dumpStats():
+#     print("Served ~%d requests\n" % _tCount)
 
-# Dump last _pFuzzLen fuzzes
-def dumpLast():
-    dumpFileName = "".join(chr(random.randint(65,90)) for _ in range(0,10))+".fpl"
-    with open(dumpFileName, "wb") as dumpFile:
-        pickle.dump(_pFuzzes, dumpFile)
-    dumpStats()
-    print("Dumped last %d fuzzes to '%s':\n" % (_pFuzzLen, dumpFileName))
+# # Dump last _pFuzzLen fuzzes
+# def dumpLast():
+#     dumpFileName = "".join(chr(random.randint(65,90)) for _ in range(0,10))+".fpl"
+#     with open(dumpFileName, "wb") as dumpFile:
+#         pickle.dump(_pFuzzes, dumpFile)
+#     dumpStats()
+#     print("Dumped last %d fuzzes to '%s':\n" % (_pFuzzLen, dumpFileName))
 
 # Clean up everything
 def cleanUp():
@@ -165,9 +167,11 @@ def cleanUp():
     # Hack to quickly close the listening socket
     try:
         _closeSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        _closeSock.settimeout(1)
         _closeSock.connect((_fuzzHost,_fuzzPort))
         _closeSock.send(b"bye")
-    except e:
+        _closeSock.close()
+    except Exception as e:
         print(e)
 
     try:    _countThread.join()
@@ -215,13 +219,13 @@ def main(opts, args):
         
         # Q to quit
         if cmd in ("q", "Q"):
-            dumpStats()
+            # dumpStats()
             cleanUp()
-            return
+            sys.exit(0)
 
         # Any other input saves the current fuzz backlog
-        else:
-            dumpLast()
+        # else:
+            # dumpLast()
 
 if __name__ == "__main__":
     # Parse program options
